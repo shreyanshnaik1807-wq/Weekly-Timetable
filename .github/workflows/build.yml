@@ -3,9 +3,6 @@ on: [push, workflow_dispatch]
 jobs:
   build:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ./weekly timetable
     steps:
       - uses: actions/checkout@v4
       - name: Setup Java
@@ -13,12 +10,15 @@ jobs:
         with:
           distribution: 'zulu'
           java-version: '17'
-      - name: Grant Execute Permission for Gradle
-        run: chmod +x gradlew
-      - name: Build Debug APK
-        run: ./gradlew assembleDebug
-      - name: Upload APK
+      - name: Find and Build Android Project
+        run: |
+          GRADLE_DIR=$(find . -name "gradlew" -exec dirname {} \;)
+          echo "Found project directory at: $GRADLE_DIR"
+          cd "$GRADLE_DIR"
+          chmod +x gradlew
+          ./gradlew assembleDebug
+      - name: Find and Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-debug
-          path: weekly timetable/app/build/outputs/apk/debug/app-debug.apk
+          path: "**/build/outputs/apk/debug/app-debug.apk"
